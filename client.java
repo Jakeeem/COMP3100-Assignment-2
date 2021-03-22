@@ -8,47 +8,41 @@ public class client {
     public static void main(String[] args) {
         try {
             Socket s = new Socket("localhost", 50000);
-            String myString = "";
+            String currentMsg = "";
             boolean end = false;
             handshake(s);
    
-//Tells the server that the client is ready for a job
-sendMsg(s, "REDY");
+            //Tells the server that the client is ready for a job
+            //sendMsg(s, "REDY");
             //Get the server state information
          /*   sendMsg(s, "GETS All");
             //Obtains server state info
-            myString = readMsg(s);
-            System.out.println("Server State Info: " + myString);
+            currentMsg = readMsg(s);
+            System.out.println("Server State Info: " + currentMsg);
             sendMsg(s, "OK");*/
             //While the simulation has not been told to end
             while(end == false){
                 //Tells the server that the client is ready for a job
-                sendMsg(s, "REDY");
+                sendMsg(s, "REDY\n");
                 //Obtains  job from the server
-                myString = readMsg(s);
-                System.out.println("JOB: " + myString);
+                currentMsg = readMsg(s);
+                System.out.println("JOB: " + currentMsg);
                 //Checks to see if the received command is "NONE" or "QUIT" which
                 //ends the program
-                if(myString == "NONE" || myString == "QUIT"){
+                if(currentMsg.contains("NONE") || currentMsg.contains("QUIT")){
                     end = true;
                     break;
                 }
-                //myString is now a job that needs to be scheduled
-
-
-                
+                //currentMsg is now a job that needs to be scheduled
 
 
 
 
-
-
-
-
-                if(myString.contains("JOBN")){
-                    String[] JOBNSplit = myString.split(" ");
+                if(currentMsg.contains("JOBN")){
+                    String[] JOBNSplit = currentMsg.split(" ");
                     /*
                     String command = JOBN;
+                    int jobNumber
                     int submitTime = 0;
                     int jobID = 0;
                     int estRuntime = 0;
@@ -59,39 +53,84 @@ sendMsg(s, "REDY");
 
                     
                     //See what servers are available
-                    sendMsg(s, "GETS Avail " + JOBNSplit[4] + " " + JOBNSplit[5] + " " + JOBNSplit[6]);
-                    myString = readMsg(s);
-                    System.out.println("Data: " + myString);
+                    sendMsg(s, "GETS Capable " + JOBNSplit[4] + " " + JOBNSplit[5] + " " + JOBNSplit[6] + "\n");
+                    currentMsg = readMsg(s);
+                    System.out.println("Data: " + currentMsg);
                     //Say OK to the server (ie: OK i got your msg)
-                    sendMsg(s, "OK");
+                    sendMsg(s, "OK\n");
 
                     //Read the available servers data
-                    myString = readMsg(s);
-                    System.out.println("After Avail: " + myString);
+                    currentMsg = readMsg(s);
+                    //System.out.println("After Avail: " + currentMsg);
 
-
-                    String[] AvailSplit = myString.split(" ");
-                    sendMsg(s, "OK");
+                    
+                    String[] AvailSplit = currentMsg.split("\n");
+                    sendMsg(s, "OK\n");
                     if(AvailSplit.length <= 0){
                         break;
                     }
-                    
-                    myString = readMsg(s);
-                    System.out.println("After Avail: " + myString);
-                    if(myString == "."){
-                        TimeUnit.SECONDS.sleep(1);
+
+                    String[] biggestServer = findBiggestServer(currentMsg);
+                    /*String[] chosenServer = currentMsg.split("\n");
+                    for(int i = 0; i < chosenServer.length; i++){
+                        System.out.println(i + " = " + chosenServer[i]);
                     }
+                    for(int i =0; i < AvailSplit.length; i++){
+                        String[] individualServerChecker = AvailSplit[i].split(" ");
+                        if(individualServerChecker[2].contains("inactive")){
+                            chosenServer = AvailSplit[i].split(" ");
+                            i = AvailSplit.length;
+                        }
+                    }
+                    */
+                    currentMsg = readMsg(s);
+                    System.out.println("After Avail: " + currentMsg);
+
+
+
+/*
+                    //if(currentMsg == "."){
+                      //  TimeUnit.SECONDS.sleep(1);
+                    //}
                     //Schedules the job
-                    sendMsg(s, "SCHD " + JOBNSplit[2] + AvailSplit[0] + " " + AvailSplit[1]);
-                    myString = readMsg(s);
-                    System.out.println("SCHD: " + myString);
+                    int checker = 0;
+                    for(int i = 0; i < AvailSplit.length/9; i++){
+                        System.out.println("AvailSplit: " + AvailSplit[2 + (i*9)]);
+                        if(!AvailSplit[2 + (i*9)].contains("boot")){
+                            checker = i;
+                            i = AvailSplit.length;
+                        }
+                        System.out.println();
+                        System.out.println();
+                        System.out.println("Booting Found");
+                        System.out.println();
+                        System.out.println();
+                    }
+                    System.out.println("Checker: " + checker);
+                    System.out.println("AvailSplit[0]: " + AvailSplit[0]);
+                    System.out.println("AvailSplit[1]: " + AvailSplit[1]);
+                    System.out.println("AvailSplit[2]: " + AvailSplit[2]);
+                    System.out.println("AvailSplit[3]: " + AvailSplit[3]);
+                    System.out.println("AvailSplit[4]: " + AvailSplit[4]);
+                    System.out.println("AvailSplit[5]: " + AvailSplit[5]);
+                    System.out.println("AvailSplit[6]: " + AvailSplit[6]);
+                    System.out.println("AvailSplit[7]: " + AvailSplit[7]);
+                    System.out.println("AvailSplit[8]: " + AvailSplit[8]);
+                    System.out.println("AvailSplit[9]: " + AvailSplit[9]);
+                    System.out.println("AvailSplit[10]: " + AvailSplit[10]);
+*/
+
+
+
+                    //SCHD JobNumber ServerName ServerNumber
+
+                    sendMsg(s, "SCHD " + JOBNSplit[2] + " " + biggestServer[0] + " " + biggestServer[1] + "\n");
+                    currentMsg = readMsg(s);
+                    System.out.println("SCHD: " + currentMsg);
                 }
-                if(myString.contains("DATA")){
-                    sendMsg(s, "OK");
-                }
-                else if(myString.contains("NONE")){
-                    end = true;
-                    break;
+
+                else if(currentMsg.contains("DATA")){
+                    sendMsg(s, "OK\n");
                 }
 
                 
@@ -108,7 +147,7 @@ sendMsg(s, "REDY");
             }
 
             //Sends "Quit" to the server to end the session
-            sendMsg(s, "QUIT");
+            sendMsg(s, "QUIT\n");
             //Closes the socket
             s.close();
         } catch (Exception e) {
@@ -116,8 +155,9 @@ sendMsg(s, "REDY");
         }
     }
 
+    //Function used to read a msg from the server
     public static synchronized String readMsg(Socket s){
-        String myString = "FAIL";
+        String currentMsg = "FAIL";
         try {
             DataInputStream dis = new DataInputStream(s.getInputStream());
             byte[] byteArray = new byte[dis.available()];
@@ -129,20 +169,21 @@ sendMsg(s, "REDY");
                 byteArray = new byte[dis.available()];
                 dis.read(byteArray);
                 //Make a string using the recieved bytes and print it
-                myString = new String(byteArray, StandardCharsets.UTF_8);
+                currentMsg = new String(byteArray, StandardCharsets.UTF_8);
             }
             
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return myString;
+        return currentMsg;
         
     }
 
-    public static synchronized void sendMsg(Socket s, String myString){
+    //Function used to send a msg to the server
+    public static synchronized void sendMsg(Socket s, String currentMsg){
         try {
             DataOutputStream dout = new DataOutputStream(s.getOutputStream());
-            byte[] byteArray = myString.getBytes();
+            byte[] byteArray = currentMsg.getBytes();
             dout.write(byteArray);
             dout.flush();
         } catch (IOException e) {
@@ -152,20 +193,48 @@ sendMsg(s, "REDY");
     }
 
     public static void handshake(Socket s){
-        String myString = "";
+        String currentMsg = "";
 
         //Initiate handshake with server
-        sendMsg(s, "HELO");
+        sendMsg(s, "HELO\n");
         
         //Check for response from sever for "HELO"
-        myString = readMsg(s);
-        System.out.println("RCVD: " + myString);
+        currentMsg = readMsg(s);
+        System.out.println("RCVD: " + currentMsg);
 
         //Authenticate with a username (ubuntu)
-        sendMsg(s, "AUTH " + System.getProperty("user.name"));
+        sendMsg(s, "AUTH " + System.getProperty("user.name") + "\n");
 
         //Check to see if sever has ok'd the client's AUTH
-        myString = readMsg(s);
-        System.out.println("RCVD: " + myString);
+        currentMsg = readMsg(s);
+        System.out.println("RCVD: " + currentMsg);
+    }
+
+    //Used to find the biggest server available to run the current job
+    public static String[] findBiggestServer(String currentMsg){
+        //What we will return as the biggest server to use
+        String[] biggestServer = {""};
+        //All the servers sent from the server being split into an array
+        String[] serversAndInfo = currentMsg.split("\n");
+       
+
+
+            //Go through all capable servers and rank them on how many times their name comes up (most times = index 0)
+            //Go through all capable servers and look for inactive servers && save into an array of strings
+            //if there is a server that is inactive and has the most desirable name, check to see if there are multiple and compare their cpu cores otherwise return it
+            //if not, choose the next favourable inactive server
+            //if all servers are not inactive, choose the most favourable active server
+            //if all servers are not inactive or active, choose the most favourable booting server
+            
+
+
+        
+
+
+
+
+
+
+        return biggestServer;
     }
 }

@@ -6,7 +6,7 @@ SERVER
 
 "ds-config01.xml" (or other config file) must be present in the same folder as the ds-server executable file
 Command:
-./ds-server -v all -c ds-config01.xml
+./ds-server -v all -n -c ds-config01.xml
 
 --------------------------------------------------------------------------------------------------------------------
 CLIENT
