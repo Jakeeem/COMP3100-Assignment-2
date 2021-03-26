@@ -1,116 +1,63 @@
 
 import java.io.*;
-import java.io.ObjectInputFilter.Status;
 import java.net.*;
-import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 public class client {
     public static void main(String[] args) {
         try {
             Socket s = new Socket("localhost", 50000);
+            //Set up variables to be used
+            String[] biggestServer = {""};
+            boolean biggestFound = false;
             String currentMsg = "";
-            boolean end = false;
             handshake(s);
 
-            // Tells the server that the client is ready for a job
-            // sendMsg(s, "REDY");
-            // Get the server state information
-            /*
-             * sendMsg(s, "GETS All"); //Obtains server state info currentMsg = readMsg(s);
-             * System.out.println("Server State Info: " + currentMsg); sendMsg(s, "OK");
-             */
-            // While the simulation has not been told to end
-            while (end == false) {
-                // Tells the server that the client is ready for a job
+            // While there are more jobs to be done
+            while (!currentMsg.contains("NONE")) {
+                // Tells the server that the client is ready for a command and reads it
                 sendMsg(s, "REDY\n");
-                // Obtains job from the server
                 currentMsg = readMsg(s);
-                System.out.println("JOB: " + currentMsg);
-                // Checks to see if the received command is "NONE" or "QUIT" which
-                // ends the program
-                if (currentMsg.contains("NONE") || currentMsg.contains("QUIT")) {
-                    end = true;
-                    break;
-                }
-                // currentMsg is now a job that needs to be scheduled
-
+                
+                // Checks to see if the received command is a new job
                 if (currentMsg.contains("JOBN")) {
                     String[] JOBNSplit = currentMsg.split(" ");
-                    /*
-                     * String command = JOBN; int jobNumber int submitTime = 0; int jobID = 0; int
-                     * estRuntime = 0; int core = 0; int memory = 0; int disk = 0;
-                     */
-
-                    // See what servers are available
-                    sendMsg(s, "GETS Capable " + JOBNSplit[4] + " " + JOBNSplit[5] + " " + JOBNSplit[6] + "\n");
+                    //Ask what servers are available to run a job with the given data
+                    sendMsg(s, "GETS Avail " + JOBNSplit[4] + " " + JOBNSplit[5] + " " + JOBNSplit[6] + "\n");
+                    //Reads the msg saying what data is about to be sent and responds with "OK"
                     currentMsg = readMsg(s);
-                    System.out.println("Data: " + currentMsg);
-                    // Say OK to the server (ie: OK i got your msg)
                     sendMsg(s, "OK\n");
 
-                    // Read the available servers data
+                    // Reads the available servers data and responds with "OK"
                     currentMsg = readMsg(s);
-                    // System.out.println("After Avail: " + currentMsg);
-
-                    String[] AvailSplit = currentMsg.split("\n");
                     sendMsg(s, "OK\n");
-                    if (AvailSplit.length <= 0) {
-                        break;
+
+                    //Checks to see if the biggest Server has been found
+                    //Used as a flag to see that it was found on the first round
+                    if(biggestFound == false){
+                        biggestServer = findBiggestServer(currentMsg);
+                        biggestFound = true;
                     }
 
-                    String[] biggestServer = findBiggestServer(currentMsg);
-                    /*
-                     * String[] chosenServer = currentMsg.split("\n"); for(int i = 0; i <
-                     * chosenServer.length; i++){ System.out.println(i + " = " + chosenServer[i]); }
-                     * for(int i =0; i < AvailSplit.length; i++){ String[] individualServerChecker =
-                     * AvailSplit[i].split(" ");
-                     * if(individualServerChecker[2].contains("inactive")){ chosenServer =
-                     * AvailSplit[i].split(" "); i = AvailSplit.length; } }
-                     */
+                    //Reads "." from the server
                     currentMsg = readMsg(s);
-                    System.out.println("After Avail: " + currentMsg);
 
-                    /*
-                     * //if(currentMsg == "."){ // TimeUnit.SECONDS.sleep(1); //} //Schedules the
-                     * job int checker = 0; for(int i = 0; i < AvailSplit.length/9; i++){
-                     * System.out.println("AvailSplit: " + AvailSplit[2 + (i*9)]); if(!AvailSplit[2
-                     * + (i*9)].contains("boot")){ checker = i; i = AvailSplit.length; }
-                     * System.out.println(); System.out.println();
-                     * System.out.println("Booting Found"); System.out.println();
-                     * System.out.println(); } System.out.println("Checker: " + checker);
-                     * System.out.println("AvailSplit[0]: " + AvailSplit[0]);
-                     * System.out.println("AvailSplit[1]: " + AvailSplit[1]);
-                     * System.out.println("AvailSplit[2]: " + AvailSplit[2]);
-                     * System.out.println("AvailSplit[3]: " + AvailSplit[3]);
-                     * System.out.println("AvailSplit[4]: " + AvailSplit[4]);
-                     * System.out.println("AvailSplit[5]: " + AvailSplit[5]);
-                     * System.out.println("AvailSplit[6]: " + AvailSplit[6]);
-                     * System.out.println("AvailSplit[7]: " + AvailSplit[7]);
-                     * System.out.println("AvailSplit[8]: " + AvailSplit[8]);
-                     * System.out.println("AvailSplit[9]: " + AvailSplit[9]);
-                     * System.out.println("AvailSplit[10]: " + AvailSplit[10]);
-                     */
-
-                    // SCHD JobNumber ServerName ServerNumber
-
+                    //Schedule the current job to the biggest server (SCHD JobNumber ServerName ServerNumber)
                     sendMsg(s, "SCHD " + JOBNSplit[2] + " " + biggestServer[0] + " " + biggestServer[1] + "\n");
+
+                    //Read the next JOB
                     currentMsg = readMsg(s);
                     System.out.println("SCHD: " + currentMsg);
                 }
-
                 else if (currentMsg.contains("DATA")) {
                     sendMsg(s, "OK\n");
                 }
-
             }
-
-            // Sends "Quit" to the server to end the session
+            // Sends "Quit" to the server to end the session and then closes the socket
             sendMsg(s, "QUIT\n");
-            // Closes the socket
             s.close();
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             System.out.println(e);
         }
     }
@@ -131,17 +78,17 @@ public class client {
                 // Make a string using the recieved bytes and print it
                 currentMsg = new String(byteArray, StandardCharsets.UTF_8);
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //Return the msg just recieved from the server
         return currentMsg;
-
     }
 
     // Function used to send a msg to the server
     public static synchronized void sendMsg(Socket s, String currentMsg) {
         try {
+            //Converts the String msg to an array of bytes and sends them to the server
             DataOutputStream dout = new DataOutputStream(s.getOutputStream());
             byte[] byteArray = currentMsg.getBytes();
             dout.write(byteArray);
@@ -149,7 +96,6 @@ public class client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public static void handshake(Socket s) {
@@ -172,79 +118,28 @@ public class client {
 
     // Used to find the biggest server available to run the current job
     public static String[] findBiggestServer(String currentMsg) {
-        // What we will return as the biggest server to use
-        // All the servers sent from the server being split into an array
+        // All the servers in the currentMsg being split into an array
         String[] serversAndInfo = currentMsg.split("\n");
-        // for each serversAndInfo
-        // check cpu cores
-        // check active Status
-        // return biggest inactive/active if all active/booting server
+        //Sets up variables
         int mostCores = 0;
-        int activeAndBooting = 0;
-        String[] currentServer = { "" };
+        String[] currentServer = {""};
+        //Searches for the most cores a server holds in the given available servers
         for (int i = 0; i < serversAndInfo.length; i++) {
             currentServer = serversAndInfo[i].split(" ");
             int currentCores = Integer.valueOf(currentServer[4]);
-
-            if (currentCores > mostCores && currentServer[2].contains("inactive")) {
+            if (currentCores > mostCores) {
                 mostCores = currentCores;
             }
-            if (currentServer[2].contains("active") || currentServer[2].contains("booting")) {
-                activeAndBooting++;
-            }
         }
-        if (mostCores == 0) {
-            for (int i = 0; i < serversAndInfo.length; i++) {
-                currentServer = serversAndInfo[i].split(" ");
-                int currentCores = Integer.valueOf(currentServer[4]);
-
-                if (currentCores > mostCores && !currentServer[2].contains("booting")) {
-                    mostCores = currentCores;
-                }
-            }
-        }
-        /*
-         * // if # of capable servers == number of servers that are active or booting if
-         * (serversAndInfo.length == activeAndBooting) { // chose an active server for
-         * (int i = 0; i < serversAndInfo.length; i++) { currentServer =
-         * serversAndInfo[i].split(" "); int currentCores =
-         * Integer.valueOf(currentServer[4]); if (currentCores == mostCores &&
-         * currentServer[2].contains("active")) { return currentServer; } } } else { //
-         * Chose an inactive server for (int i = 0; i < serversAndInfo.length; i++) {
-         * currentServer = serversAndInfo[i].split(" "); int currentCores =
-         * Integer.valueOf(currentServer[4]); if (currentCores == mostCores &&
-         * currentServer[2].contains("inactive")) { return currentServer; } } }
-         */
+        //Finds and returns the biggest server (The one with the most cores)
         for (int i = 0; i < serversAndInfo.length; i++) {
             currentServer = serversAndInfo[i].split(" ");
             int currentCores = Integer.valueOf(currentServer[4]);
-            if (currentCores == mostCores && currentServer[2].contains("inactive")) {
+            if (currentCores == mostCores) {
                 return currentServer;
             }
         }
+        return currentServer;
 
-        for (int i = 0; i < serversAndInfo.length; i++) {
-            currentServer = serversAndInfo[i].split(" ");
-            int currentCores = Integer.valueOf(currentServer[4]);
-            if (currentCores == mostCores && currentServer[2].contains("active")) {
-                return currentServer;
-            }
-        }
-
-        // If no active/ incative with most cores return the last server
-        return serversAndInfo[serversAndInfo.length - 1].split(" ");
-
-        // Go through all capable servers and rank them on how many times their name
-        // comes up (most times = index 0)
-        // Go through all capable servers and look for inactive servers && save into an
-        // array of strings
-        // if there is a server that is inactive and has the most desirable name, check
-        // to see if there are multiple and compare their cpu cores otherwise return it
-        // if not, choose the next favourable inactive server
-        // if all servers are not inactive, choose the most favourable active server
-        // if all servers are not inactive or active, choose the most favourable booting
-        // server
-
-        // return currentServer;
     }
 }
