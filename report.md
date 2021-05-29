@@ -12,7 +12,9 @@ Stage 2 of the project revolves around the idea of improving upon an existing al
 I have chosen to improve upon the best-fit algorithm with the goal of minimising the average turnaround time for scheduling jobs.
 
 ### Problem
+Currently, the best-fit algorithm looks at servers and calculates the CPU cores required, against the CPU cores a server has available. However, a flaw in this algorithm is that it doesn't look at the possibility of running multiple jobs simultaneously. 
 
+To fix this, I plan to extend the algorithm by putting functionality in place that will check if any servers are completing any jobs, and assigning jobs to servers capable of running any other jobs at the same time.
 
 ### Algorithm
 
