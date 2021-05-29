@@ -6,10 +6,9 @@ import java.nio.charset.StandardCharsets;
 public class client {
     public static void main(String[] args) {
         try {
-            Socket s = new Socket("localhost", 50000);
-            //Set up variables to be used
-            String[] biggestServer = {""};
-            boolean biggestFound = false;
+            Socket s = new Socket("localhost", 1337);
+
+            String[] bestServer = {""};
             String currentMsg = "";
             Handshake(s);
 
@@ -20,10 +19,12 @@ public class client {
                 currentMsg = ReadMsg(s);
                 
                 // Checks to see if the received command is a new job
-                if (currentMsg.contains("JOBN")) {
-                    String[] JOBNSplit = currentMsg.split(" ");
+                if (currentMsg.contains("JOBN") || currentMsg.contains("JOBP")) {
+                    String[] jobSplit = currentMsg.split(" ");
+                    
                     //Ask what servers are available to run a job with the given data
-                    SendMsg(s, "GETS Avail " + JOBNSplit[4] + " " + JOBNSplit[5] + " " + JOBNSplit[6] + "\n");
+                    SendMsg(s, "GETS Avail " + jobSplit[4] + " " + jobSplit[5] + " " + jobSplit[6] + "\n");
+                    
                     //Reads the msg saying what data is about to be sent and responds with "OK"
                     currentMsg = ReadMsg(s);
                     SendMsg(s, "OK\n");
@@ -32,27 +33,10 @@ public class client {
                     currentMsg = ReadMsg(s);
                     SendMsg(s, "OK\n");
 
-                    //Checks to see if the biggest Server has been found
-                    //Used as a flag to see that it was found on the first round
-                    if(biggestFound == false){
-                        biggestServer = findBiggestServer(currentMsg);
-                        biggestFound = true;
-                    }
+                    // implement bestServer logic here
 
-                    //Reads "." from the server
-                    currentMsg = ReadMsg(s);
-
-                    //Schedule the current job to the biggest server (SCHD JobNumber ServerName ServerNumber)
-                    SendMsg(s, "SCHD " + JOBNSplit[2] + " " + biggestServer[0] + " " + biggestServer[1] + "\n");
-
-                    //Read the next JOB
-                    currentMsg = ReadMsg(s);
-                    System.out.println("SCHD: " + currentMsg);
-                }
-                else if (currentMsg.contains("DATA")) {
-                    SendMsg(s, "OK\n");
-                }
             }
+            
             // Sends "Quit" to the server to end the session and then closes the socket
             SendMsg(s, "QUIT\n");
             s.close();
@@ -60,6 +44,10 @@ public class client {
         catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    public static String[] FindBestFit(){
+        return "";
     }
 
     // Function used to read a msg from the server
@@ -114,9 +102,5 @@ public class client {
         // Check to see if sever has ok'd the client's AUTH
         currentMsg = ReadMsg(s);
         System.out.println("RCVD: " + currentMsg);
-    }
-
-    public static String[] FindBestFit(){
-        return "";
     }
 }
