@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 public class client {
     public static void main(String[] args) {
         try {
-            Socket s = new Socket("localhost", 1337);
+            Socket s = new Socket("localhost", 50000);
 
             String[] bestServer = {""};
             String currentMsg = "";
